@@ -11,13 +11,17 @@ public class EmployeePayrollService {
 	};
 
 	public List<EmployeePayrollData> employeePayrollList;
+	private EmployeePayrollDBService employeePayrollDBService;
+	
+	public EmployeePayrollService()
+	{
+		employeePayrollDBService = EmployeePayrollDBService.getInstance();
+	}
 
 	public EmployeePayrollService(List<EmployeePayrollData> employeePayrollList) {
 		this.employeePayrollList = employeePayrollList;
 	}
 
-	public EmployeePayrollService() {
-	}
 
 	static Scanner scanner = new Scanner(System.in);
 
@@ -43,8 +47,8 @@ public class EmployeePayrollService {
 	 * Takes employee input from user through console
 	 * 
 	 * @param scanner
-	 * @return 
-	 * @throws SQLException 
+	 * @return
+	 * @throws SQLException
 	 */
 	public List<EmployeePayrollData> readEmployeeData(IOService ioService) throws SQLException {
 		if (ioService.equals(IOService.CONSOLE_IO)) {
@@ -78,6 +82,31 @@ public class EmployeePayrollService {
 		else if (ioService.equals(IOService.FILE_IO)) {
 			new EmployeePayrollFile().writeData(employeePayrollList);
 		}
+	}
+
+	public void updateEmployeePayrollSalary(String name, double salary) {
+		int result = employeePayrollDBService.updateEmployeeData(name, salary);
+
+		if (result == 0) {
+			return;
+		}
+
+		EmployeePayrollData employeePayrollData = this.getEmployeePayrollData(name);
+
+		if (employeePayrollData != null) {
+			employeePayrollData.salary = salary;
+		}
+	}
+
+	public boolean checkEmployeePayrollInSyncWithDB(String name) {
+		List<EmployeePayrollData> employeePayrollDataList = employeePayrollDBService.getEmployeePayrollData(name);
+		return employeePayrollDataList.get(0).equals(getEmployeePayrollData(name));
+	}
+
+	private EmployeePayrollData getEmployeePayrollData(String name) {
+		EmployeePayrollData employeePayrollData = this.employeePayrollList.stream()
+				.filter(employeePayrollDataItem -> employeePayrollDataItem.name.equals(name)).findFirst().orElse(null);
+		return employeePayrollData;
 	}
 
 	/**
