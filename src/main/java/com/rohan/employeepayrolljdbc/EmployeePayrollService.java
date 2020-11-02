@@ -1,7 +1,9 @@
 package com.rohan.employeepayrolljdbc;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class EmployeePayrollService {
 	public enum IOService {
@@ -87,6 +89,7 @@ public class EmployeePayrollService {
 
 	/**
 	 * returns list of employees having joining between given start and end date
+	 * 
 	 * @param start
 	 * @param end
 	 * @return
@@ -99,6 +102,81 @@ public class EmployeePayrollService {
 			System.out.println(exception.getMessage());
 		}
 		return employeeByDateList;
+	}
+
+	/**
+	 * returns map of gender and average salary
+	 * 
+	 * @return
+	 */
+	public Map<String, Double> getEmployeeAverageByGender() {
+		Map<String, Double> genderComputedMap = new HashMap<>();
+		try {
+			genderComputedMap = employeePayrollDBService.getEmployeesByFunction("AVG");
+		} catch (payrollServiceDBException exception) {
+			System.out.println(exception.getMessage());
+		}
+		return genderComputedMap;
+	}
+
+	/**
+	 * returns map of gender and sum of salaries
+	 * 
+	 * @return
+	 */
+	public Map<String, Double> getEmployeeSumByGender() {
+		Map<String, Double> genderComputedMap = new HashMap<>();
+		try {
+			genderComputedMap = employeePayrollDBService.getEmployeesByFunction("SUM");
+		} catch (payrollServiceDBException exception) {
+			System.out.println(exception.getMessage());
+		}
+		return genderComputedMap;
+	}
+
+	/**
+	 * returns map of gender and max salary
+	 * 
+	 * @return
+	 */
+	public Map<String, Double> getEmployeeMaximumSalaryByGender() {
+		Map<String, Double> genderComputedMap = new HashMap<>();
+		try {
+			genderComputedMap = employeePayrollDBService.getEmployeesByFunction("MAX");
+		} catch (payrollServiceDBException exception) {
+			System.out.println(exception.getMessage());
+		}
+		return genderComputedMap;
+	}
+
+	/**
+	 * returns map of gender and min salary
+	 * 
+	 * @return
+	 */
+	public Map<String, Double> getEmployeeMinimumSalaryByGender() {
+		Map<String, Double> genderComputedMap = new HashMap<>();
+		try {
+			genderComputedMap = employeePayrollDBService.getEmployeesByFunction("MIN");
+		} catch (payrollServiceDBException exception) {
+			System.out.println(exception.getMessage());
+		}
+		return genderComputedMap;
+	}
+
+	/**
+	 * returns map of gender and number of employees
+	 * 
+	 * @return
+	 */
+	public Map<String, Double> getEmployeeCountByGender() {
+		Map<String, Double> genderComputedMap = new HashMap<>();
+		try {
+			genderComputedMap = employeePayrollDBService.getEmployeesByFunction("COUNT");
+		} catch (payrollServiceDBException exception) {
+			System.out.println(exception.getMessage());
+		}
+		return genderComputedMap;
 	}
 
 }

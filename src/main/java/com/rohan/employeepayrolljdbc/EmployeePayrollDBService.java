@@ -7,7 +7,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.mysql.jdbc.PreparedStatement;
 import com.mysql.jdbc.Statement;
@@ -128,6 +130,7 @@ public class EmployeePayrollDBService {
 
 	/**
 	 * when passed query returns list of employee payroll data
+	 * 
 	 * @param sql
 	 * @return
 	 * @throws payrollServiceDBException
@@ -185,15 +188,41 @@ public class EmployeePayrollDBService {
 
 	/**
 	 * when given date range returns list of employees who joined between dates
+	 * 
 	 * @param start
 	 * @param end
 	 * @return
 	 * @throws payrollServiceDBException
 	 */
-	public List<EmployeePayrollData> readDataForGivenDateRange(LocalDate start, LocalDate end) throws payrollServiceDBException {
+	public List<EmployeePayrollData> readDataForGivenDateRange(LocalDate start, LocalDate end)
+			throws payrollServiceDBException {
 		String sql = String.format("Select * from employee_payroll where start between '%s' and '%s' ;",
 				Date.valueOf(start), Date.valueOf(end));
 		return this.getData(sql);
+	}
+
+	/**
+	 * returns map of gender and calculated values when passed a function
+	 * 
+	 * @param function
+	 * @return
+	 * @throws payrollServiceDBException
+	 */
+	public Map<String, Double> getEmployeesByFunction(String function) throws payrollServiceDBException {
+		Map<String, Double> genderComputedMap = new HashMap<>();
+		String sql = String.format("Select gender, %s(salary) from employee_payroll group by gender ; ", function);
+		try (Connection connection = this.getConnection()) {
+			Statement statement = (Statement) connection.createStatement();
+			ResultSet result = statement.executeQuery(sql);
+			while (result.next()) {
+				String gender = result.getString(1);
+				Double salary = result.getDouble(2);
+				genderComputedMap.put(gender, salary);
+			}
+		} catch (SQLException exception) {
+			throw new payrollServiceDBException("Unable to find " + function);
+		}
+		return genderComputedMap;
 	}
 
 }
