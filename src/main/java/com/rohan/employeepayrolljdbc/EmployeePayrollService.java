@@ -1,5 +1,6 @@
 package com.rohan.employeepayrolljdbc;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public class EmployeePayrollService {
@@ -11,7 +12,7 @@ public class EmployeePayrollService {
 	private EmployeePayrollDBService employeePayrollDBService;
 
 	/**
-	 * Default Constructor for caching employeePayrollDBService object 
+	 * Default Constructor for caching employeePayrollDBService object
 	 */
 	public EmployeePayrollService() {
 		employeePayrollDBService = EmployeePayrollDBService.getInstance();
@@ -69,7 +70,7 @@ public class EmployeePayrollService {
 	}
 
 	/**
-	 * checks if record matches with the updated record 
+	 * checks if record matches with the updated record
 	 * 
 	 * @param name
 	 * @return
@@ -82,6 +83,22 @@ public class EmployeePayrollService {
 			System.out.println(exception.getMessage());
 		}
 		return employeePayrollDataList.get(0).equals(getEmployeePayrollData(name));
+	}
+
+	/**
+	 * returns list of employees having joining between given start and end date
+	 * @param start
+	 * @param end
+	 * @return
+	 */
+	public List<EmployeePayrollData> getEmployeeByDate(LocalDate start, LocalDate end) {
+		List<EmployeePayrollData> employeeByDateList = null;
+		try {
+			employeeByDateList = employeePayrollDBService.readDataForGivenDateRange(start, end);
+		} catch (payrollServiceDBException exception) {
+			System.out.println(exception.getMessage());
+		}
+		return employeeByDateList;
 	}
 
 }

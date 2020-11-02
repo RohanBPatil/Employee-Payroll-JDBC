@@ -1,6 +1,7 @@
 package com.rohan.employeepayrolljdbc;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -54,10 +55,11 @@ public class EmployeePayrollDBService {
 	}
 
 	/**
-	 * returns list of 
+	 * returns list of
+	 * 
 	 * @param resultSet
 	 * @return
-	 * @throws SQLException 
+	 * @throws SQLException
 	 * @throws payrollServiceDBException
 	 */
 	private List<EmployeePayrollData> getEmployeePayrollData(ResultSet resultSet) throws SQLException {
@@ -69,7 +71,7 @@ public class EmployeePayrollDBService {
 			LocalDate startDate = resultSet.getDate("start").toLocalDate();
 			employeePayrollList.add(new EmployeePayrollData(id, name, salary, startDate));
 		}
-	
+
 		return employeePayrollList;
 	}
 
@@ -82,8 +84,10 @@ public class EmployeePayrollDBService {
 			throw new payrollServiceDBException(exception.getMessage());
 		}
 	}
+
 	/**
 	 * updates data using statement
+	 * 
 	 * @param name
 	 * @param salary
 	 * @return
@@ -101,9 +105,10 @@ public class EmployeePayrollDBService {
 			throw new payrollServiceDBException("Error while updating data");
 		}
 	}
-	
+
 	/**
 	 * updates data using prepared statement
+	 * 
 	 * @param name
 	 * @param salary
 	 * @return
@@ -111,7 +116,7 @@ public class EmployeePayrollDBService {
 	 */
 	private int updateEmployeeDataUsingPreparedStatement(String name, double salary) throws payrollServiceDBException {
 		try (Connection connection = this.getConnection()) {
-			String sql = "Update employee_payroll set salary = ? where name = ? ; " ; 
+			String sql = "Update employee_payroll set salary = ? where name = ? ; ";
 			PreparedStatement prepareStatement = (PreparedStatement) connection.prepareStatement(sql);
 			prepareStatement.setDouble(1, salary);
 			prepareStatement.setString(2, name);
@@ -122,13 +127,12 @@ public class EmployeePayrollDBService {
 	}
 
 	/**
-	 * reads data from database and returns it in list
-	 * 
+	 * when passed query returns list of employee payroll data
+	 * @param sql
 	 * @return
 	 * @throws payrollServiceDBException
 	 */
-	public List<EmployeePayrollData> readData() throws payrollServiceDBException {
-		String sql = "select *  from employee_payroll;";
+	private List<EmployeePayrollData> getData(String sql) throws payrollServiceDBException {
 		List<EmployeePayrollData> employeePayrollList = new ArrayList<>();
 		try (Connection connection = this.getConnection()) {
 			Statement statement = (Statement) connection.createStatement();
@@ -142,7 +146,19 @@ public class EmployeePayrollDBService {
 	}
 
 	/**
+	 * reads data from database and returns it in list
+	 * 
+	 * @return
+	 * @throws payrollServiceDBException
+	 */
+	public List<EmployeePayrollData> readData() throws payrollServiceDBException {
+		String sql = "select *  from employee_payroll;";
+		return this.getData(sql);
+	}
+
+	/**
 	 * updates data and returns number of records updated
+	 * 
 	 * @param name
 	 * @param salary
 	 * @return
@@ -165,6 +181,19 @@ public class EmployeePayrollDBService {
 			throw new payrollServiceDBException(exception.getMessage());
 		}
 		return employeePayrollList;
+	}
+
+	/**
+	 * when given date range returns list of employees who joined between dates
+	 * @param start
+	 * @param end
+	 * @return
+	 * @throws payrollServiceDBException
+	 */
+	public List<EmployeePayrollData> readDataForGivenDateRange(LocalDate start, LocalDate end) throws payrollServiceDBException {
+		String sql = String.format("Select * from employee_payroll where start between '%s' and '%s' ;",
+				Date.valueOf(start), Date.valueOf(end));
+		return this.getData(sql);
 	}
 
 }
