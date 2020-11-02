@@ -225,4 +225,36 @@ public class EmployeePayrollDBService {
 		return genderComputedMap;
 	}
 
+	/**
+	 * adds employee details to database
+	 * 
+	 * @param name
+	 * @param gender
+	 * @param salary
+	 * @param date
+	 * @return
+	 * @throws payrollServiceDBException
+	 */
+	public EmployeePayrollData addEmployeeToPayroll(String name, String gender, double salary, LocalDate date)
+			throws payrollServiceDBException {
+		int employeeId = -1;
+		EmployeePayrollData employee = null;
+		String sql = String.format(
+				"insert into employee_payroll (name, gender, salary, start) values ('%s', '%s', '%s', '%s')", name,
+				gender, salary, Date.valueOf(date));
+		try (Connection connection = this.getConnection()) {
+			Statement statement = (Statement) connection.createStatement();
+			int rowAffected = statement.executeUpdate(sql, statement.RETURN_GENERATED_KEYS);
+			if (rowAffected == 1) {
+				ResultSet resultSet = statement.getGeneratedKeys();
+				if (resultSet.next())
+					employeeId = resultSet.getInt(1);
+			}
+			employee = new EmployeePayrollData(employeeId, name, gender, salary, date);
+		} catch (SQLException exception) {
+			throw new payrollServiceDBException("Unable to add to database");
+		}
+		return employee;
+	}
+
 }

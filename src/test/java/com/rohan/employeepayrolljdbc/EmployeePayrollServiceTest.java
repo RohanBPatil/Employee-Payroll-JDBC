@@ -3,7 +3,6 @@ package com.rohan.employeepayrolljdbc;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,7 +38,7 @@ class EmployeePayrollServiceTest {
 	public void givenDateRange_WhenRetrieved_ShouldMatchEmployeeCount() {
 		List<EmployeePayrollData> employeeByDateList = null;
 		LocalDate start = LocalDate.of(2018, 8, 10);
-		LocalDate end = LocalDate.of(2020, 8, 10);
+		LocalDate end = LocalDate.now();
 		employeeByDateList = employeePayrollService.getEmployeeByDate(start, end);
 		assertEquals(3, employeeByDateList.size());
 	}
@@ -54,6 +53,7 @@ class EmployeePayrollServiceTest {
 	@Test
 	public void givenEmployees_WhenRetrievedMaximumSalaryByGender_ShouldReturnComputedMap() {
 		Map<String, Double> genderComputedMap = employeePayrollService.getEmployeeMaximumSalaryByGender();
+		System.out.println(genderComputedMap.get("M"));
 		assertTrue(genderComputedMap.get("M").equals(500000.0));
 		assertTrue(genderComputedMap.get("F").equals(500000.0));
 	}
@@ -77,5 +77,12 @@ class EmployeePayrollServiceTest {
 		Map<String, Double> genderComputedMap = employeePayrollService.getEmployeeCountByGender();
 		assertTrue(genderComputedMap.get("M").equals(3.0));
 		assertTrue(genderComputedMap.get("F").equals(1.0));
+	}
+
+	@Test
+	public void givenNewEmployee_WhenAdded_ShouldSincWithDB() {
+		employeePayrollService.addEmployeeToPayroll("Raghav", "M", 500000, LocalDate.now());
+		boolean result = employeePayrollService.checkEmployeePayrollInSyncWithDB("Raghav");
+		assertTrue(result);
 	}
 }
