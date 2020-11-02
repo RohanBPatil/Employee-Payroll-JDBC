@@ -1,5 +1,6 @@
 package com.rohan.employeepayrolljdbc;
 
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -190,7 +191,7 @@ public class EmployeePayrollService {
 	public void addEmployeeToPayroll(String name, String gender, double salary, LocalDate date) {
 		try {
 			employeePayrollDBService.addEmployeeToPayroll(name, gender, salary, date);
-		} catch (payrollServiceDBException exception) {
+		} catch (payrollServiceDBException | SQLException exception) {
 			System.out.println(exception.getMessage());
 		}
 	}

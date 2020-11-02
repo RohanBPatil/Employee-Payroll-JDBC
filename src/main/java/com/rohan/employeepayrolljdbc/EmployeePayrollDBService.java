@@ -234,16 +234,19 @@ public class EmployeePayrollDBService {
 	 * @param date
 	 * @return
 	 * @throws payrollServiceDBException
+	 * @throws SQLException
 	 */
+	@SuppressWarnings("static-access")
 	public EmployeePayrollData addEmployeeToPayroll(String name, String gender, double salary, LocalDate date)
 			throws payrollServiceDBException {
 		int employeeId = -1;
+		Connection connection = null;
 		EmployeePayrollData employee = null;
-		String sql = String.format(
-				"insert into employee_payroll (name, gender, salary, start) values ('%s', '%s', '%s', '%s')", name,
-				gender, salary, Date.valueOf(date));
-		try (Connection connection = this.getConnection()) {
-			Statement statement = (Statement) connection.createStatement();
+		connection = this.getConnection();
+		try (Statement statement = (Statement) connection.createStatement()) {
+			String sql = String.format(
+					"insert into employee_payroll (name, gender, salary, start) values ('%s', '%s', '%s', '%s')", name,
+					gender, salary, Date.valueOf(date));
 			int rowAffected = statement.executeUpdate(sql, statement.RETURN_GENERATED_KEYS);
 			if (rowAffected == 1) {
 				ResultSet resultSet = statement.getGeneratedKeys();
@@ -252,6 +255,22 @@ public class EmployeePayrollDBService {
 			}
 			employee = new EmployeePayrollData(employeeId, name, gender, salary, date);
 		} catch (SQLException exception) {
+			throw new payrollServiceDBException("Unable to add to database");
+		}
+		try (Statement statement = (Statement) connection.createStatement()) {
+			double deductions = salary * 0.2;
+			double taxable_pay = salary - deductions;
+			double tax = taxable_pay * 0.1;
+			double netPay = salary - tax;
+			String sql = String.format(
+					"insert into payroll_details (employeeId, basic_pay, deductions, taxable_pay, tax, net_pay) "
+							+ "VALUES ('%s','%s','%s','%s','%s','%s')",
+					employeeId, salary, deductions, taxable_pay, tax, netPay);
+			int rowAffected = statement.executeUpdate(sql);
+			if (rowAffected == 1) {
+				employee = new EmployeePayrollData(employeeId, name, gender, salary, date);
+			}
+		} catch (SQLException e) {
 			throw new payrollServiceDBException("Unable to add to database");
 		}
 		return employee;

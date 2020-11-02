@@ -28,7 +28,7 @@ class EmployeePayrollServiceTest {
 
 	@Test
 	public void givenNewSalaryForEmployee_WhenUpdated_ShouldSyncWithDb() {
-		employeePayrollService.updateEmployeePayrollSalary("Raghav", 600000.00);
+		employeePayrollService.updateEmployeePayrollSalary("Raghav", 500000.00);
 		boolean result = employeePayrollService.checkEmployeePayrollInSyncWithDB("Raghav");
 		assertEquals(4, employeePayrollData.size());
 		assertTrue(result);
@@ -53,7 +53,6 @@ class EmployeePayrollServiceTest {
 	@Test
 	public void givenEmployees_WhenRetrievedMaximumSalaryByGender_ShouldReturnComputedMap() {
 		Map<String, Double> genderComputedMap = employeePayrollService.getEmployeeMaximumSalaryByGender();
-		System.out.println(genderComputedMap.get("M"));
 		assertTrue(genderComputedMap.get("M").equals(500000.0));
 		assertTrue(genderComputedMap.get("F").equals(500000.0));
 	}
@@ -82,6 +81,7 @@ class EmployeePayrollServiceTest {
 	@Test
 	public void givenNewEmployee_WhenAdded_ShouldSincWithDB() {
 		employeePayrollService.addEmployeeToPayroll("Raghav", "M", 500000, LocalDate.now());
+		employeePayrollService.readEmployeeData(IOService.DB_IO);
 		boolean result = employeePayrollService.checkEmployeePayrollInSyncWithDB("Raghav");
 		assertTrue(result);
 	}
