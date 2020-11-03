@@ -155,7 +155,11 @@ public class EmployeePayrollDBService {
 	 * @throws payrollServiceDBException
 	 */
 	public List<EmployeePayrollData> readData() throws payrollServiceDBException {
-		String sql = "select *  from employee_payroll;";
+		String sql = "select employee_payroll.employeeId, employee_dept.departmentName, employee_payroll.name, employee.gender,"
+				+ "payroll_details.salary, payroll_details.deductions, payroll_details.taxable_pay, payroll_details.tax, payroll_details.net_pay, employee_payroll.start"
+				+ "from employee_payroll"
+				+ "inner join employee_dept on employee_payroll.employeeId = employee_dept.employeeId"
+				+ "inner join payroll_details on employee_payroll.employeeId = payroll_details.employeeId;";
 		return this.getData(sql);
 	}
 
@@ -248,7 +252,7 @@ public class EmployeePayrollDBService {
 		} catch (SQLException exception) {
 			throw new payrollServiceDBException(exception.getMessage());
 		}
-		try (Statement statement = (Statement) connection.createStatement()) {
+		try (Statement statement = (Statement) connection.createStatement()) { // adding to employee_payroll table
 			String sql = String.format(
 					"insert into employee_payroll (name, gender, salary, start) values ('%s', '%s', '%s', '%s')", name,
 					gender, salary, Date.valueOf(date));
@@ -267,7 +271,7 @@ public class EmployeePayrollDBService {
 			}
 			throw new payrollServiceDBException("Unable to add to database");
 		}
-		try (Statement statement = (Statement) connection.createStatement()) {
+		try (Statement statement = (Statement) connection.createStatement()) { // adding to payroll_details table
 			double deductions = salary * 0.2;
 			double taxable_pay = salary - deductions;
 			double tax = taxable_pay * 0.1;
@@ -276,10 +280,7 @@ public class EmployeePayrollDBService {
 					"insert into payroll_details (employeeId, basic_pay, deductions, taxable_pay, tax, net_pay) "
 							+ "VALUES ('%s','%s','%s','%s','%s','%s')",
 					employeeId, salary, deductions, taxable_pay, tax, netPay);
-			int rowAffected = statement.executeUpdate(sql);
-			if (rowAffected == 1) {
-				employee = new EmployeePayrollData(employeeId, name, gender, salary, date);
-			}
+			statement.executeUpdate(sql);
 		} catch (SQLException e) {
 			try {
 				connection.rollback();
