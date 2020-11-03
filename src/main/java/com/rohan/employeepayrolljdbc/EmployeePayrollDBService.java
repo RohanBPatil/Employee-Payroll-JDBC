@@ -245,8 +245,8 @@ public class EmployeePayrollDBService {
 		connection = this.getConnection();
 		try {
 			connection.setAutoCommit(false);
-		} catch (SQLException e1) {
-			e1.printStackTrace();
+		} catch (SQLException exception) {
+			throw new payrollServiceDBException(exception.getMessage());
 		}
 		try (Statement statement = (Statement) connection.createStatement()) {
 			String sql = String.format(
@@ -263,7 +263,7 @@ public class EmployeePayrollDBService {
 			try {
 				connection.rollback();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				throw new payrollServiceDBException(e.getMessage());
 			}
 			throw new payrollServiceDBException("Unable to add to database");
 		}
@@ -284,20 +284,36 @@ public class EmployeePayrollDBService {
 			try {
 				connection.rollback();
 			} catch (SQLException exception) {
-				exception.printStackTrace();
+				throw new payrollServiceDBException(exception.getMessage());
 			}
 			throw new payrollServiceDBException("Unable to add to database");
 		}
 		try {
 			connection.commit();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			throw new payrollServiceDBException(e.getMessage());
 		} finally {
 			if (connection != null) {
 				connection.close();
 			}
 		}
 		return employee;
+	}
+
+	/**
+	 * deletes employee record in cascade from both tables of database
+	 * 
+	 * @param id
+	 * @throws payrollServiceDBException
+	 */
+	public void deleteEmployeeFromPayroll(int id) throws payrollServiceDBException {
+		String sql = String.format("delete from employee_payroll where id = %s;", id);
+		try (Connection connection = this.getConnection()) {
+			Statement statement = (Statement) connection.createStatement();
+			statement.executeUpdate(sql);
+		} catch (SQLException exception) {
+			throw new payrollServiceDBException("Unable to delete data");
+		}
 	}
 
 }

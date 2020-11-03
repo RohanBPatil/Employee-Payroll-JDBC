@@ -196,4 +196,17 @@ public class EmployeePayrollService {
 		}
 	}
 
+	/**
+	 * deletes employee record from database
+	 * 
+	 * @param id
+	 */
+	public void deleteEmployeeFromPayroll(int id) {
+		try {
+			employeePayrollDBService.deleteEmployeeFromPayroll(id);
+		} catch (payrollServiceDBException exception) {
+			System.out.println(exception.getMessage());
+		}
+	}
+
 }
