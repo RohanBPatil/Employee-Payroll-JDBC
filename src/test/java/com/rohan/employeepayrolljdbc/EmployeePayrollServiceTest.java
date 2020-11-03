@@ -3,6 +3,7 @@ package com.rohan.employeepayrolljdbc;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -80,7 +81,8 @@ class EmployeePayrollServiceTest {
 
 	@Test
 	public void givenNewEmployee_WhenAdded_ShouldSincWithDB() {
-		employeePayrollService.addEmployeeToPayroll("Raghav", "M", 500000, LocalDate.now());
+		employeePayrollService.addEmployeeToPayroll("Raghav", "M", 500000, LocalDate.now(),
+				Arrays.asList("Sales", "Marketing"));
 		employeePayrollData = employeePayrollService.readEmployeeData(IOService.DB_IO);
 		boolean result = employeePayrollService.checkEmployeePayrollInSyncWithDB("Raghav");
 		assertTrue(result);
@@ -92,6 +94,5 @@ class EmployeePayrollServiceTest {
 		employeePayrollData = employeePayrollService.readEmployeeData(IOService.DB_IO);
 		assertEquals(3, employeePayrollData.size());
 	}
-	
-	
+
 }

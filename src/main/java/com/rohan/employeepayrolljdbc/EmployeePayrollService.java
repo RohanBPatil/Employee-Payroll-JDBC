@@ -188,9 +188,10 @@ public class EmployeePayrollService {
 	 * @param salary
 	 * @param date
 	 */
-	public void addEmployeeToPayroll(String name, String gender, double salary, LocalDate date) {
+	public void addEmployeeToPayroll(String name, String gender, double salary, LocalDate date,
+			List<String> departments) {
 		try {
-			employeePayrollDBService.addEmployeeToPayroll(name, gender, salary, date);
+			employeePayrollDBService.addEmployeeToPayroll(name, gender, salary, date, departments);
 		} catch (payrollServiceDBException | SQLException exception) {
 			System.out.println(exception.getMessage());
 		}
