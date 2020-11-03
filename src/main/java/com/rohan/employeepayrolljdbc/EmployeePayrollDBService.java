@@ -379,4 +379,20 @@ public class EmployeePayrollDBService {
 		}
 	}
 
+	/**
+	 * makes status of employee having given id as inactive
+	 * 
+	 * @param id
+	 * @return
+	 * @throws payrollServiceDBException
+	 */
+	public List<EmployeePayrollData> removeEmployeeFromCompany(int id) throws payrollServiceDBException {
+		List<EmployeePayrollData> listOfAllEmplyees = this.readData();
+		listOfAllEmplyees.forEach(employee -> {
+			if (employee.id == id) {
+				employee.is_active = false;
+			}
+		});
+		return listOfAllEmplyees;
+	}
 }
