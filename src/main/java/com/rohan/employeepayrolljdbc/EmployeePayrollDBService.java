@@ -7,9 +7,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.mysql.jdbc.PreparedStatement;
 import com.mysql.jdbc.Statement;
@@ -57,7 +59,7 @@ public class EmployeePayrollDBService {
 	}
 
 	/**
-	 * returns list of
+	 * returns list of employees
 	 * 
 	 * @param resultSet
 	 * @return
@@ -66,13 +68,26 @@ public class EmployeePayrollDBService {
 	 */
 	private List<EmployeePayrollData> getEmployeePayrollData(ResultSet resultSet) throws SQLException {
 		List<EmployeePayrollData> employeePayrollList = new ArrayList<>();
-		while (resultSet.next()) {
+		Map<Integer, EmployeePayrollData> employeePayrollMap = new HashMap<>();
+		while(resultSet.next()) {
 			int id = resultSet.getInt("id");
+			String deptName = resultSet.getString("departmentName");
 			String name = resultSet.getString("name");
+			String gender = resultSet.getString("gender");
 			double salary = resultSet.getDouble("salary");
+			double deductions = resultSet.getDouble("deductions");
+			double taxable_pay = resultSet.getDouble("taxable_pay");
+			double tax = resultSet.getDouble("tax");
+			double netPay = resultSet.getDouble("net_pay");
 			LocalDate startDate = resultSet.getDate("start").toLocalDate();
-			employeePayrollList.add(new EmployeePayrollData(id, name, salary, startDate));
+			PayrollDetails payrollDetails = new PayrollDetails(deductions, taxable_pay, tax, netPay);
+			if(employeePayrollMap.containsKey(id)) {
+				employeePayrollMap.get(id).departments.add(deptName);
+			} else {
+				employeePayrollMap.put(id, new EmployeePayrollData(id, name, gender, salary, startDate, payrollDetails, Arrays.asList(deptName)));
+			}
 		}
+		employeePayrollList = employeePayrollMap.values().stream().collect(Collectors.toList());
 
 		return employeePayrollList;
 	}
@@ -94,37 +109,72 @@ public class EmployeePayrollDBService {
 	 * @param salary
 	 * @return
 	 * @throws payrollServiceDBException
+	 * @throws SQLException 
 	 */
-	private int updateEmployeeDataUsingStatement(String name, double salary) throws payrollServiceDBException {
-		String sql = String.format("update employee_payroll set salary = %.2f where name = '%s';", salary, name);
-
-		try (Connection connection = this.getConnection()) {
-			Statement statement = (Statement) connection.createStatement();
-			return statement.executeUpdate(sql);
-		} catch (payrollServiceDBException exception) {
-			throw new payrollServiceDBException(exception.getMessage());
+	@SuppressWarnings("static-access")
+	private int updateEmployeeDataUsingStatement(String name, double salary) throws payrollServiceDBException, SQLException {
+		int employeeId = -1;
+		int rowAffected = 0;
+		Connection connection = null;
+		connection = this.getConnection();
+		try {
+			connection.setAutoCommit(false);
 		} catch (SQLException exception) {
+			throw new payrollServiceDBException(exception.getMessage());
+		}
+		String sql = String.format("update employee_payroll set salary = %.2f where name = '%s';", salary, name);
+		try (Statement statement = (Statement) connection.createStatement()) {
+			rowAffected = statement.executeUpdate(sql, statement.RETURN_GENERATED_KEYS);
+			if (rowAffected == 1) {
+				ResultSet resultSet = statement.getGeneratedKeys();
+				if (resultSet.next())
+					employeeId = resultSet.getInt(1);
+			}
+		} catch (SQLException exception) {
+			try {
+				connection.rollback();
+			} catch (SQLException e) {
+				throw new payrollServiceDBException(e.getMessage());
+			}
 			throw new payrollServiceDBException("Error while updating data");
 		}
+		this.addToPayrollDetails(connection,employeeId, salary);			// adding to payroll_details table
+		
+		try {
+			connection.commit();
+		} catch (SQLException e) {
+			throw new payrollServiceDBException(e.getMessage());
+		} finally {
+			if (connection != null) {
+				connection.close();
+			}
+		}
+		return rowAffected;
 	}
-
+	
 	/**
-	 * updates data using prepared statement
-	 * 
-	 * @param name
+	 * adding to payroll_details table
 	 * @param salary
-	 * @return
-	 * @throws payrollServiceDBException
+	 * @throws payrollServiceDBException 
 	 */
-	private int updateEmployeeDataUsingPreparedStatement(String name, double salary) throws payrollServiceDBException {
-		try (Connection connection = this.getConnection()) {
-			String sql = "Update employee_payroll set salary = ? where name = ? ; ";
-			PreparedStatement prepareStatement = (PreparedStatement) connection.prepareStatement(sql);
-			prepareStatement.setDouble(1, salary);
-			prepareStatement.setString(2, name);
-			return prepareStatement.executeUpdate();
-		} catch (SQLException | payrollServiceDBException exception) {
-			throw new payrollServiceDBException(exception.getMessage());
+	private void addToPayrollDetails(Connection connection, int employeeId, double salary) throws payrollServiceDBException {
+		try (Statement statement = (Statement) connection.createStatement()) { 
+			double deductions = salary * 0.2;
+			double taxable_pay = salary - deductions;
+			double tax = taxable_pay * 0.1;
+			double netPay = salary - tax;
+			String sql = String.format(
+					"insert into payroll_details (employeeId, basic_pay, deductions, taxable_pay, tax, net_pay) "
+							+ "VALUES ('%s','%s','%s','%s','%s','%s')",
+					employeeId, salary, deductions, taxable_pay, tax, netPay);
+			statement.executeUpdate(sql);
+		} catch (SQLException e) {
+			try {
+				connection.rollback();
+			} catch (SQLException exception) {
+				throw new payrollServiceDBException(exception.getMessage());
+			}
+			throw new payrollServiceDBException("Unable to add to database");
 		}
 	}
 
@@ -155,11 +205,11 @@ public class EmployeePayrollDBService {
 	 * @throws payrollServiceDBException
 	 */
 	public List<EmployeePayrollData> readData() throws payrollServiceDBException {
-		String sql = "select employee_payroll.employeeId, employee_dept.departmentName, employee_payroll.name, employee.gender,"
+		String sql = "select employee_payroll.id, employee_dept.departmentName, employee_payroll.name, employee.gender,"
 				+ "payroll_details.salary, payroll_details.deductions, payroll_details.taxable_pay, payroll_details.tax, payroll_details.net_pay, employee_payroll.start"
 				+ "from employee_payroll"
-				+ "inner join employee_dept on employee_payroll.employeeId = employee_dept.employeeId"
-				+ "inner join payroll_details on employee_payroll.employeeId = payroll_details.employeeId;";
+				+ "inner join employee_dept on employee_payroll.id = employee_dept.employeeId"
+				+ "inner join payroll_details on employee_payroll.id = payroll_details.employeeId;";
 		return this.getData(sql);
 	}
 
@@ -172,7 +222,11 @@ public class EmployeePayrollDBService {
 	 * @throws payrollServiceDBException
 	 */
 	public int updateEmployeeData(String name, double salary) throws payrollServiceDBException {
-		return this.updateEmployeeDataUsingPreparedStatement(name, salary);
+		try {
+			return this.updateEmployeeDataUsingStatement(name, salary);
+		} catch (SQLException e) {
+			throw new payrollServiceDBException(e.getMessage());
+		}
 	}
 
 	public List<EmployeePayrollData> getEmployeePayrollData(String name) throws payrollServiceDBException {
@@ -252,6 +306,7 @@ public class EmployeePayrollDBService {
 		} catch (SQLException exception) {
 			throw new payrollServiceDBException(exception.getMessage());
 		}
+		
 		try (Statement statement = (Statement) connection.createStatement()) { // adding to employee_payroll table
 			String sql = String.format(
 					"insert into employee_payroll (name, gender, salary, start) values ('%s', '%s', '%s', '%s')", name,
@@ -271,24 +326,9 @@ public class EmployeePayrollDBService {
 			}
 			throw new payrollServiceDBException("Unable to add to database");
 		}
-		try (Statement statement = (Statement) connection.createStatement()) { // adding to payroll_details table
-			double deductions = salary * 0.2;
-			double taxable_pay = salary - deductions;
-			double tax = taxable_pay * 0.1;
-			double netPay = salary - tax;
-			String sql = String.format(
-					"insert into payroll_details (employeeId, basic_pay, deductions, taxable_pay, tax, net_pay) "
-							+ "VALUES ('%s','%s','%s','%s','%s','%s')",
-					employeeId, salary, deductions, taxable_pay, tax, netPay);
-			statement.executeUpdate(sql);
-		} catch (SQLException e) {
-			try {
-				connection.rollback();
-			} catch (SQLException exception) {
-				throw new payrollServiceDBException(exception.getMessage());
-			}
-			throw new payrollServiceDBException("Unable to add to database");
-		}
+		
+		this.addToPayrollDetails(connection,employeeId, salary);			// adding to payroll_details table
+		
 		try {
 			connection.commit();
 		} catch (SQLException e) {
