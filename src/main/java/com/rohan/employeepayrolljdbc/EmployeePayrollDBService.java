@@ -300,4 +300,20 @@ public class EmployeePayrollDBService {
 		return employee;
 	}
 
+	/**
+	 * deletes employee record in cascade from both tables of database
+	 * 
+	 * @param id
+	 * @throws payrollServiceDBException
+	 */
+	public void deleteEmployeeFromPayroll(int id) throws payrollServiceDBException {
+		String sql = String.format("delete from employee_payroll where id = %s;", id);
+		try (Connection connection = this.getConnection()) {
+			Statement statement = (Statement) connection.createStatement();
+			statement.executeUpdate(sql);
+		} catch (SQLException exception) {
+			throw new payrollServiceDBException("Unable to delete data");
+		}
+	}
+
 }
