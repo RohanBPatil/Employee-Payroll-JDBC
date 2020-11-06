@@ -13,12 +13,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.mysql.jdbc.PreparedStatement;
 import com.mysql.jdbc.Statement;
 
 public class EmployeePayrollDBService {
 	private static EmployeePayrollDBService employeePayrollDBService;
 	private PreparedStatement employeePayrollDataPrepareStatement;
+	private int connectionCounter = 0;
+	private static final Logger LOG = LogManager.getLogger(EmployeePayrollDBService.class);
 
 	private EmployeePayrollDBService() {
 
@@ -37,20 +42,24 @@ public class EmployeePayrollDBService {
 	}
 
 	/**
-	 * returns established connection with database
+	 * returns established synchronized connection with database
+	 * 
 	 * 
 	 * @return
 	 * @throws payrollServiceDBException
 	 */
-	private Connection getConnection() throws payrollServiceDBException {
+	private synchronized Connection getConnection() throws payrollServiceDBException {
+		connectionCounter++;
 		String jdbcURL = "jdbc:mysql://localhost:3306/payroll_service?useSSL=false";
 		String userName = "root";
 		String password = "rpatil";
 		Connection connection = null;
 		try {
-			System.out.println("Connecting to database:" + jdbcURL);
+			LOG.info("Processing Thread: " + Thread.currentThread().getName() + " Connecting to database with Id: "
+					+ connectionCounter + "  URL : " + jdbcURL);
 			connection = DriverManager.getConnection(jdbcURL, userName, password);
-			System.out.println("Connection is successful!" + connection);
+			LOG.info("Processing Thread: " + Thread.currentThread().getName() + " Connecting to database with Id: "
+					+ connectionCounter + " Connection is successfull!!" + connection);
 		} catch (Exception exception) {
 			throw new payrollServiceDBException("Connection is not successful");
 		}
