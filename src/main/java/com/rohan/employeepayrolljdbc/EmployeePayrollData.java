@@ -2,6 +2,7 @@ package com.rohan.employeepayrolljdbc;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 public class EmployeePayrollData {
 	public int id;
@@ -60,4 +61,10 @@ public class EmployeePayrollData {
 		EmployeePayrollData that = (EmployeePayrollData) o;
 		return id == that.id && Double.compare(that.salary, salary) == 0 && name.equals(that.name);
 	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(name, gender, salary, startDate);
+	}
+
 }
