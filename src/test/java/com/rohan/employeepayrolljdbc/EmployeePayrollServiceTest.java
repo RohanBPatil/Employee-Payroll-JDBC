@@ -105,17 +105,23 @@ class EmployeePayrollServiceTest {
 
 	@Test
 	public void given6Employees_WhenAddedToDB_ShouldMatchEmployeeCount() throws payrollServiceDBException {
-		EmployeePayrollData[] arrayOfEmp = { new EmployeePayrollData(0, "Jeff", "M", 100000.0, LocalDate.now(), Arrays.asList("Sales")),
+		EmployeePayrollData[] arrayOfEmp = {
+				new EmployeePayrollData(0, "Jeff", "M", 100000.0, LocalDate.now(), Arrays.asList("Sales")),
 				new EmployeePayrollData(0, "Bill", "M", 200000.0, LocalDate.now(), Arrays.asList("Marketing")),
 				new EmployeePayrollData(0, "Mark ", "M", 150000.0, LocalDate.now(), Arrays.asList("Technical")),
-				new EmployeePayrollData(0, "Sundar", "M", 400000.0, LocalDate.now(), Arrays.asList("Sales","Technical")),
+				new EmployeePayrollData(0, "Sundar", "M", 400000.0, LocalDate.now(),
+						Arrays.asList("Sales", "Technical")),
 				new EmployeePayrollData(0, "Mukesh ", "M", 4500000.0, LocalDate.now(), Arrays.asList("Sales")),
 				new EmployeePayrollData(0, "Anil", "M", 300000.0, LocalDate.now(), Arrays.asList("Sales")) };
 		Instant start = Instant.now();
 		employeePayrollService.addMultipleEmployeesToPayroll(Arrays.asList(arrayOfEmp));
 		Instant end = Instant.now();
 		System.out.println("Duration without Thread: " + Duration.between(start, end));
+		Instant threadStart = Instant.now();
+		employeePayrollService.addMultipleEmployeesToPayrollWithThreads(Arrays.asList(arrayOfEmp));
+		Instant threadEnd = Instant.now();
+		System.out.println("Duration with Thread: " + Duration.between(threadStart, threadEnd));
 		employeePayrollData = employeePayrollService.readEmployeeData(IOService.DB_IO);
-		assertEquals(7, employeePayrollData.size());
+		assertEquals(15, employeePayrollData.size());
 	}
 }

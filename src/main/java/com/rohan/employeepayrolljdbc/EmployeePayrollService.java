@@ -226,16 +226,54 @@ public class EmployeePayrollService {
 		return onlyActiveList;
 	}
 
+	/**
+	 * adding multiple employees to payroll without thread
+	 * 
+	 * @param employeeDataList
+	 */
 	public void addMultipleEmployeesToPayroll(List<EmployeePayrollData> employeeDataList) {
 		employeeDataList.forEach(employee -> {
-//			System.out.println("Employee Being added: "+employee.name);
+			System.out.println("Employee Being added without threading : " + employee.name);
 			try {
-				employeePayrollDBService.addEmployeeToPayroll(employee.name,employee.gender,employee.salary,employee.startDate,employee.departments);
+				employeePayrollDBService.addEmployeeToPayroll(employee.name, employee.gender, employee.salary,
+						employee.startDate, employee.departments);
 			} catch (SQLException | payrollServiceDBException e) {
-				e.printStackTrace();
+				System.out.println(e.getMessage());
 			}
-//			System.out.println("Employee added: "+employee.name);
+			System.out.println("Employee added without threading : " + employee.name);
 		});
-//		System.out.println(this.employeeList);
+		System.out.println(readEmployeeData(IOService.DB_IO));
+	}
+
+	/**
+	 * adding multiple employees to payroll with thread
+	 * 
+	 * @param employeeDataList
+	 */
+	public void addMultipleEmployeesToPayrollWithThreads(List<EmployeePayrollData> employeeDataList) {
+		Map<Integer, Boolean> employeeAdditionStatus = new HashMap<Integer, Boolean>();
+		employeeDataList.forEach(employee -> {
+			Runnable task = () -> {
+				employeeAdditionStatus.put(employee.hashCode(), false);
+				System.out.println("Employee Being Added: " + Thread.currentThread().getName());
+				try {
+					employeePayrollDBService.addEmployeeToPayroll(employee.name, employee.gender, employee.salary,
+							employee.startDate, employee.departments);
+				} catch (SQLException | payrollServiceDBException e) {
+					System.out.println(e.getMessage());
+				}
+				employeeAdditionStatus.put(employee.hashCode(), true);
+				System.out.println("Employee Added: " + Thread.currentThread().getName());
+			};
+			Thread thread = new Thread(task, employee.name);
+			thread.start();
+		});
+		while (employeeAdditionStatus.containsValue(false)) {
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				System.out.println(e.getMessage());
+			}
+		}
 	}
 }
