@@ -350,4 +350,14 @@ public class EmployeePayrollService {
 		}
 		return count;
 	}
+
+	/**
+	 * deleting data from JSON server
+	 * 
+	 * @param name
+	 */
+	public void deleteEmployeeJSON(String name) {
+		EmployeePayrollData employee = this.getEmployeePayrollData(name);
+		employeePayrollList.remove(employee);
+	}
 }
