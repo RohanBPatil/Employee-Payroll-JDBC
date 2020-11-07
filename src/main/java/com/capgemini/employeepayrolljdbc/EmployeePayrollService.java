@@ -39,7 +39,7 @@ public class EmployeePayrollService {
 	 * @param name
 	 * @return
 	 */
-	private EmployeePayrollData getEmployeePayrollData(String name) {
+	public EmployeePayrollData getEmployeePayrollData(String name) {
 		EmployeePayrollData employeePayrollData = this.employeePayrollList.stream()
 				.filter(employeePayrollDataItem -> employeePayrollDataItem.name.equals(name)).findFirst().orElse(null);
 		return employeePayrollData;
