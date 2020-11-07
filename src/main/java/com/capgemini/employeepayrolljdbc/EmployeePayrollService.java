@@ -340,6 +340,7 @@ public class EmployeePayrollService {
 	 */
 	public void addEmployeeToPayroll(EmployeePayrollData employee) {
 		addEmployeeToPayroll(employee.name, employee.gender, employee.salary, employee.startDate, Arrays.asList(""));
+		employeePayrollList.add(employee);
 	}
 
 	public int countEntries(IOService io) {
