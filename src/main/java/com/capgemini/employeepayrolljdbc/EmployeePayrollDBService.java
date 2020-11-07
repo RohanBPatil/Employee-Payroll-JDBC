@@ -1,4 +1,4 @@
-package com.rohan.employeepayrolljdbc;
+package com.capgemini.employeepayrolljdbc;
 
 import java.sql.Connection;
 import java.sql.Date;

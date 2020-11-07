@@ -1,4 +1,4 @@
-package com.rohan.employeepayrolljdbc;
+package com.capgemini.employeepayrolljdbc;
 
 @SuppressWarnings("serial")
 public class payrollServiceDBException extends Exception {

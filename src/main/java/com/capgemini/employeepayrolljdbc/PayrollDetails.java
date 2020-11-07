@@ -1,4 +1,4 @@
-package com.rohan.employeepayrolljdbc;
+package com.capgemini.employeepayrolljdbc;
 
 public class PayrollDetails {
 	public double deductions;

@@ -1,4 +1,4 @@
-package com.rohan.employeepayrolljdbc;
+package com.capgemini.employeepayrolljdbc;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -13,7 +13,7 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import com.rohan.employeepayrolljdbc.EmployeePayrollService.IOService;
+import com.capgemini.employeepayrolljdbc.EmployeePayrollService.IOService;
 
 class EmployeePayrollServiceTest {
 	public static EmployeePayrollService employeePayrollService;
